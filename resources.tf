@@ -50,32 +50,6 @@ resource "aws_instance" "main" {
 
 }
 
-resource "null_resource" "webapp" {
-
-  triggers = {
-    webapp_server_count = length(aws_instance.main.*.id)
-    web_server_names    = join(",", aws_instance.main.*.id)
-  }
-
-  provisioner "file" {
-    content = templatefile("./templates/application.config.tpl", {
-      hosts     = aws_instance.main.*.private_dns
-      site_name = "${local.name_prefix}-taco-wagon"
-      api_key   = var.api_key
-    })
-    destination = "/home/ec2-user/application.config"
-  }
-
-  connection {
-    type        = "ssh"
-    user        = "ec2-user"
-    port        = "22"
-    host        = aws_instance.main[0].public_ip
-    private_key = module.ssh_keys.private_key_openssh
-  }
-
-}
-
 resource "aws_lb" "main" {
   name               = "${local.name_prefix}-webapp"
   internal           = false
